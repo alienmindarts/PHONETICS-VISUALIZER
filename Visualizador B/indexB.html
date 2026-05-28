@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratório do Alfabeto Visual</title>
+    <style>
+        /* === CSS: Estilos e Layout === */
+        :root {
+            --bg-color: #f4f4f9;
+            --content-bg: #ffffff;
+            --text-color: #333;
+            --grid-empty: #e0e0e0;
+            --grid-filled: #2c3e50; /* Cor Consonantal */
+            --grid-vowel: #e74c3c;  /* Cor Vocálica (Vermelho) */
+            --accent: #3498db;
+            --cell-radius: 3px;
+            --cell-size: 30px;
+            --cell-gap: 2px;
+            --blocks-per-line: 6;
+            --block-gap: 15px;
+            --block-row-gap: 15px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { margin-bottom: 2rem; }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            background: #ddd;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            background: var(--content-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .grid-7x7 {
+            display: grid;
+            grid-template-columns: repeat(7, var(--cell-size));
+            grid-template-rows: repeat(7, var(--cell-size));
+            gap: var(--cell-gap);
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        .cell {
+            background-color: var(--grid-empty);
+            border-radius: var(--cell-radius);
+            cursor: pointer;
+            transition: background-color 0.1s;
+            box-sizing: border-box; 
+        }
+
+        .cell.active {
+            background-color: var(--grid-filled);
+        }
+
+        /* === SISTEMA DE ESTADOS DAS VOGAIS === */
+        .cell.vowel-1 {
+            background-color: var(--grid-vowel);
+        }
+
+        .cell.vowel-2 {
+            border: 3px solid var(--grid-vowel);
+            background-color: var(--grid-empty);
+        }
+
+        .cell.vowel-3 {
+            border: 3px solid var(--grid-vowel);
+            background-color: var(--grid-empty);
+            background-image: linear-gradient(
+                to bottom right, 
+                transparent calc(50% - 1.5px), 
+                var(--grid-vowel) calc(50% - 1.5px), 
+                var(--grid-vowel) calc(50% + 1.5px), 
+                transparent calc(50% + 1.5px)
+            );
+        }
+
+        .cell.vowel-4 {
+            border: 3px solid var(--grid-vowel);
+            background-color: var(--grid-empty);
+            background-image: 
+                linear-gradient(to bottom right, transparent calc(50% - 1.5px), var(--grid-vowel) calc(50% - 1.5px), var(--grid-vowel) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+                linear-gradient(to top right, transparent calc(50% - 1.5px), var(--grid-vowel) calc(50% - 1.5px), var(--grid-vowel) calc(50% + 1.5px), transparent calc(50% + 1.5px));
+        }
+
+        .code-output {
+            background: #2d2d2d;
+            color: #a6e22e;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin-bottom: 1rem;
+        }
+
+        button.copy-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Botão do Modo de Visualização */
+        .toggle-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            transition: background 0.3s;
+        }
+
+        .toggle-btn.view-mode {
+            background: #2ecc71;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1.2rem;
+            width: 400px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .debug-info {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            font-family: monospace;
+            margin-bottom: 1.5rem;
+        }
+
+        .word-display {
+            display: grid;
+            grid-template-columns: repeat(var(--blocks-per-line), auto);
+            column-gap: var(--block-gap);
+            row-gap: var(--block-row-gap);
+            justify-content: center;
+        }
+
+        .grid-display .cell {
+            cursor: default;
+        }
+
+        .color-panel {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+        .color-panel label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .color-panel input[type="color"] {
+            width: 32px;
+            height: 24px;
+            border: none;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+        }
+        .color-panel button {
+            margin-left: auto;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f8f8f8;
+            cursor: pointer;
+        }
+        .color-panel input[type="range"] {
+            width: 70px;
+            vertical-align: middle;
+        }
+        .color-panel #radius-val {
+            min-width: 1.2em;
+            text-align: right;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        .color-panel #size-val,
+        .color-panel #perline-val {
+            min-width: 1.2em;
+            text-align: right;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        .color-panel #gap-val {
+            min-width: 1.2em;
+            text-align: right;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        .color-panel #internal-val {
+            min-width: 1.2em;
+            text-align: right;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        .color-panel #row-gap-val {
+            min-width: 1.2em;
+            text-align: right;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .export-section {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .export-section select {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+        }
+
+        .grid-caption {
+            text-align: center;
+            font-size: 0.75rem;
+            font-family: monospace;
+            margin-top: 2px;
+            color: var(--text-color);
+        }
+        .grid-caption-text {
+            font-style: italic;
+            color: #888;
+        }
+
+        .grid-wrapper {
+            display: inline-block;
+        }
+
+        .color-panel input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .game-area {
+            text-align: center;
+        }
+        .game-blocks {
+            display: grid;
+            grid-template-columns: repeat(var(--blocks-per-line), auto);
+            column-gap: var(--block-gap);
+            row-gap: var(--block-row-gap);
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .game-input {
+            padding: 10px;
+            font-size: 1.2rem;
+            width: 400px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        .game-feedback {
+            font-size: 1.1rem;
+            min-height: 1.5em;
+            margin: 1rem 0;
+            font-weight: bold;
+        }
+        .game-feedback.win { color: #27ae60; }
+        .game-feedback.lose { color: #e74c3c; }
+        .game-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .game-buttons button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-nova { background: var(--accent); color: white; }
+        .btn-solucao { background: #e67e22; color: white; }
+        .btn-verificar { background: #2ecc71; color: white; }
+        .game-solution {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: #e67e22;
+            min-height: 1.5em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Laboratório Fonético Visual</h1>
+
+    <div class="color-panel">
+        <span>Cores:</span>
+        <label>Página <input type="color" id="color-page" value="#f4f4f9"></label>
+        <label>Caixa <input type="color" id="color-box" value="#ffffff"></label>
+        <label>Números <input type="color" id="color-filled" value="#2c3e50"></label>
+        <label>Vazias <input type="color" id="color-empty" value="#e0e0e0"></label>
+        <label>Vogais <input type="color" id="color-vowel" value="#e74c3c"></label>
+        <label>Arredondar <input type="range" id="radius-slider" min="0" max="15" step="1" value="3"><span id="radius-val">3</span>px</label>
+        <label>Tamanho <input type="range" id="size-slider" min="10" max="50" step="1" value="30"><span id="size-val">30</span>px</label>
+        <label>Por linha <input type="range" id="perline-slider" min="1" max="15" step="1" value="6"><span id="perline-val">6</span></label>
+        <label>Espaço <input type="range" id="gap-slider" min="0" max="40" step="1" value="15"><span id="gap-val">15</span>px</label>
+        <label>Quebra <input type="range" id="row-gap-slider" min="0" max="40" step="1" value="15"><span id="row-gap-val">15</span>px</label>
+        <label>Interno <input type="range" id="internal-slider" min="0" max="10" step="1" value="2"><span id="internal-val">2</span>px</label>
+        <label>Código <input type="checkbox" id="legend-code-toggle" checked></label>
+        <label>Texto <input type="checkbox" id="legend-text-toggle" checked></label>
+        <button onclick="resetColors()">Restaurar</button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn" onclick="switchTab('editor')">Editor de Caracteres</button>
+        <button class="tab-btn active" onclick="switchTab('tester')">Testador de Texto</button>
+        <button class="tab-btn" onclick="switchTab('jogo')">Jogo</button>
+    </div>
+
+    <div id="editor" class="tab-content">
+        <h2 style="text-align: center;">Cria o teu Algarismo</h2>
+        <p style="text-align: center; color: #666;">Clica nos quadrados para desenhar.</p>
+        
+        <div id="editor-grid" class="grid-7x7"></div>
+        
+        <div class="code-output" id="array-output">
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        </div>
+        <div style="text-align: center;">
+            <button class="copy-btn" onclick="copyArray()">Copiar Array</button>
+        </div>
+    </div>
+
+    <div id="tester" class="tab-content active">
+        <div class="input-group">
+            <h2>Escreve uma palavra ou sequência</h2>
+            
+            <button id="visibility-toggle" class="toggle-btn" onclick="toggleInputVisibility()">Esconder Painel de Escrita</button>
+            
+            <input type="text" id="text-input" placeholder="Ex: gato rato... " oninput="renderText()">
+            <div id="debug-output" class="debug-info">Código Fonético: -</div>
+        </div>
+        
+        <div id="word-container" class="word-display">
+        </div>
+
+        <div class="export-section">
+            <button onclick="exportBlocks()">Exportar Blocos</button>
+            <select id="export-format">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+                <option value="svg">SVG</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="jogo" class="tab-content">
+        <div class="game-area">
+            <h2>Adivinha a Palavra</h2>
+            <p style="color: #666;">Traduz os blocos visuais para texto e escreve a tua resposta.</p>
+            <div id="game-blocks" class="game-blocks"></div>
+            <input type="text" id="game-input" class="game-input" placeholder="Escreve a tua resposta..." onkeydown="if(event.key==='Enter') verificarResposta()">
+            <div id="game-feedback" class="game-feedback"></div>
+            <div id="game-solution" class="game-solution"></div>
+            <div class="game-buttons">
+                <button class="btn-verificar" onclick="verificarResposta()">Verificar</button>
+                <button class="btn-nova" onclick="novaPalavra()">Nova Palavra</button>
+                <button class="btn-solucao" onclick="mostrarSolucao()">Mostrar Solução</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* === JAVASCRIPT: Lógica e Estado === */
+
+        // 1. Matrizes dos Algarismos (Consoantes Base)
+        const dicionario = {
+            '0': [0,0,1,1,1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,1,1,1,0,0],
+            '1': [0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0],
+            '2': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 
+            '3': [0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0], 
+            '4': [1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1], 
+            '5': [1,0,0,1,0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,0,0,0,0,0,1,0,0,0,0,0,1,1,1,0,0,0,1,0,1,0,1,0,1,0,0,1,0,0,1], 
+            '6': [1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0,0,1,1,1,1,1,1,1,0,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,1], 
+            '7': [1,0,0,1,0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,0,0,1,1,1,1,1,1,1,0,0,1,1,1,0,0,0,1,0,1,0,1,0,1,0,0,1,0,0,1], 
+            '8': [1,0,0,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,1,0,1,0,0,0,1,0,0,1,1,1,1], 
+            '9': [1,1,1,1,1,1,1,0,0,0,1,0,0,0,1,1,1,1,1,1,1,0,0,0,1,0,0,0,1,1,1,1,1,1,1,0,0,0,1,0,0,0,1,1,1,1,1,1,1]
+        };
+
+        // 2. Coordenadas das Vogais
+        const vogaisAnteriores = {
+            'A': [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            'E': [0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            'I': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            'O': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0]
+        };
+
+        const vogaisPosteriores = {
+            'A': [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            'E': [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            'I': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+            'O': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0]
+        };
+
+        let editorState = new Array(49).fill(0);
+
+        // NOVO: Função para alternar a visibilidade do input de texto
+        function toggleInputVisibility() {
+            const btn = document.getElementById('visibility-toggle');
+            const inputField = document.getElementById('text-input');
+            const debugField = document.getElementById('debug-output');
+            const titleField = document.querySelector('#tester h2');
+
+            if (inputField.style.display !== 'none') {
+                // Modo de Visualização Puro
+                inputField.style.display = 'none';
+                debugField.style.display = 'none';
+                if(titleField) titleField.style.display = 'none';
+                btn.innerText = "Mostrar Painel de Escrita";
+                btn.classList.add('view-mode');
+            } else {
+                // Modo de Edição/Escrita
+                inputField.style.display = '';
+                debugField.style.display = '';
+                if(titleField) titleField.style.display = '';
+                btn.innerText = "Esconder Painel de Escrita";
+                btn.classList.remove('view-mode');
+            }
+        }
+
+        // MOTOR DE CONVERSÃO FONÉTICA
+        function converterTextoParaSistemaMajor(texto) {
+            let resultado = texto
+                .replace(/[çÇ]/g, '0')
+                .toUpperCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+
+            resultado = resultado.replaceAll('CH', '6');
+            resultado = resultado.replaceAll('LH', '5');
+            resultado = resultado.replaceAll('NH', '2');
+            resultado = resultado.replaceAll('RR', '4');
+            resultado = resultado.replaceAll('Y', 'I');
+            resultado = resultado.replaceAll('U', 'O');
+
+
+            resultado = resultado.replaceAll('CE', '0E');
+            resultado = resultado.replaceAll('CI', '0I');
+            resultado = resultado.replaceAll('GE', '6E');
+            resultado = resultado.replaceAll('GI', '6I');
+        
+            const consoantes = {
+                'S': '0', 'Z': '0',
+                'T': '1', 'D': '1',
+                'N': '2',
+                'M': '3',
+                'R': '4',
+                'L': '5',
+                'J': '6', 'X': '6',
+                'K': '7', 'Q': '7', 'C': '7', 'G': '7',
+                'F': '8', 'V': '8',
+                'P': '9', 'B': '9'
+            };
+
+            for (let [chave, valor] of Object.entries(consoantes)) {
+                resultado = resultado.replaceAll(chave, valor);
+            }
+
+            resultado = resultado.replace(/[^AEIO0-9\s]/g, '');
+            return resultado;
+        }
+
+        // Inicializador do Editor
+        function initEditor() {
+            const grid = document.getElementById('editor-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 49; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.addEventListener('click', () => {
+                    editorState[i] = editorState[i] === 0 ? 1 : 0;
+                    cell.classList.toggle('active');
+                    updateOutput();
+                });
+                grid.appendChild(cell);
+            }
+        }
+
+        function updateOutput() {
+            document.getElementById('array-output').innerText = `[${editorState.join(',')}]`;
+        }
+
+        function copyArray() {
+            navigator.clipboard.writeText(document.getElementById('array-output').innerText);
+            alert("Array copiado!");
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function aplicarVogal(gridBase, gridVogal, estadoVogal) {
+            let resultado = [...gridBase];
+            for (let i = 0; i < 49; i++) {
+                if (gridVogal[i] === 1) {
+                    resultado[i] = estadoVogal; 
+                }
+            }
+            return resultado;
+        }
+
+        function extrairOriginal(bruto, blocos) {
+    // Construir um array paralelo: para cada caracter do bruto,
+    // guardar o caracter normalizado (sem acentos, uppercase) e o índice original.
+    // Isto permite mapear posições correctamente mesmo com acentos.
+    const charMap = []; // [{orig: índice no bruto, ch: caracter normalizado}]
+    for (let i = 0; i < bruto.length; i++) {
+        // Normalizar cada caracter individualmente
+        let ch = bruto[i];
+        // Tratar Ç/ç antes de normalizar (como o motor de conversão faz)
+        if (ch === 'ç' || ch === 'Ç') {
+            charMap.push({ orig: i, ch: '0', isCedilha: true });
+            continue;
+        }
+        let norm = ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+        if (norm.length === 1) {
+            charMap.push({ orig: i, ch: norm });
+        }
+        // Se norm está vazio (caracter de combinação isolado), saltar
+    }
+
+    // Dígrafos que o motor de conversão colapsa num único dígito
+    const digrafos = { 'CH': '6', 'LH': '5', 'NH': '2', 'RR': '4' };
+    // Consoantes simples → dígito
+    const consoantes = {
+        'S': '0', 'Z': '0',
+        'T': '1', 'D': '1',
+        'N': '2',
+        'M': '3',
+        'R': '4',
+        'L': '5',
+        'J': '6', 'X': '6',
+        'K': '7', 'Q': '7', 'C': '7', 'G': '7',
+        'F': '8', 'V': '8',
+        'P': '9', 'B': '9'
+    };
+    // Vogais reconhecidas pelo motor
+    const vogais = new Set(['A', 'E', 'I', 'O', 'U', 'Y']);
+    // Contextos especiais: CE→0E, CI→0I, GE→6E, GI→6I
+    const contextual = { 'CE': '0', 'CI': '0', 'GE': '6', 'GI': '6' };
+
+    const silabas = [];
+    let pos = 0; // posição no charMap
+
+    for (let bloco of blocos) {
+        let startOrig = pos < charMap.length ? charMap[pos].orig : bruto.length;
+        let bIdx = 0;
+
+        while (bIdx < bloco.length && pos < charMap.length) {
+            const bCh = bloco[bIdx];
+            const cur = charMap[pos];
+
+            // Saltar caracteres no original que não são consoantes, vogais, nem H
+            // (ex: W, ou outros não mapeados pelo motor)
+            if (!cur.isCedilha && !vogais.has(cur.ch) && !consoantes[cur.ch] && cur.ch !== 'H') {
+                pos++;
+                continue;
+            }
+
+            if (/[0-9]/.test(bCh)) {
+                // O caracter do bloco é um dígito — corresponde a uma consoante (ou dígrafo) no original
+                // Verificar se é cedilha (Ç → 0)
+                if (cur.isCedilha && bCh === '0') {
+                    pos += 1;
+                    bIdx++;
+                    continue;
+                }
+                // Verificar dígrafo
+                const nextCh = (pos + 1 < charMap.length) ? charMap[pos + 1].ch : '';
+                const pair = cur.ch + nextCh;
+                if (digrafos[pair] === bCh) {
+                    pos += 2;
+                } else if (contextual[pair] === bCh) {
+                    // CE, CI, GE, GI: consome só a consoante, a vogal será consumida a seguir
+                    pos += 1;
+                } else {
+                    pos += 1;
+                }
+                bIdx++;
+            } else {
+                // O caracter do bloco é uma vogal — consome 1 caracter no original
+                pos++;
+                bIdx++;
+            }
+        }
+
+        let endOrig = pos < charMap.length ? charMap[pos].orig : bruto.length;
+        silabas.push(bruto.slice(startOrig, endOrig).toLowerCase());
+    }
+
+    return silabas;
+}
+
+        // Motor de Rendering Dinâmico com Isolamento por Espaço
+        function renderText() {
+            const rawInput = document.getElementById('text-input').value;
+            const inputFiltrado = converterTextoParaSistemaMajor(rawInput);
+            
+            document.getElementById('debug-output').innerText = `Código Fonético: ${inputFiltrado || '-'}`;
+
+            const container = document.getElementById('word-container');
+            container.innerHTML = ''; 
+
+            const palavras = inputFiltrado.split(/\s+/);
+            const palavrasOriginais = rawInput.split(/\s+/);
+
+            for (let palavraIdx = 0; palavraIdx < palavras.length; palavraIdx++) {
+                let palavra = palavras[palavraIdx];
+                if (!palavra) continue;
+                const originalPalavra = palavrasOriginais[palavraIdx] || '';
+
+                const blocos = palavra.match(/[A-Z]*[0-9][A-Z]*/g) || [];
+                const originais = extrairOriginal(originalPalavra, blocos);
+
+                for (let bIdx = 0; bIdx < blocos.length; bIdx++) {
+                    let bloco = blocos[bIdx];
+                    let numIndex = -1;
+                    for (let i = 0; i < bloco.length; i++) {
+                        if (dicionario[bloco[i]]) {
+                            numIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (numIndex !== -1) {
+                        let charNum = bloco[numIndex];
+                        let estadoAtual = [...dicionario[charNum]];
+                        
+                        let ordemAnterior = 0;
+                        let ordemPosterior = 0;
+
+                        for (let i = 0; i < bloco.length; i++) {
+                            if (i === numIndex) continue;
+
+                            let charVogal = bloco[i];
+
+                            if (i < numIndex) {
+                                if (vogaisAnteriores[charVogal]) {
+                                    let estadoId = 2 + ordemAnterior;
+                                    if (estadoId > 5) estadoId = 5;
+                                    estadoAtual = aplicarVogal(estadoAtual, vogaisAnteriores[charVogal], estadoId);
+                                    ordemAnterior++;
+                                }
+                            } else {
+                                if (vogaisPosteriores[charVogal]) {
+                                    let estadoId = 2 + ordemPosterior;
+                                    if (estadoId > 5) estadoId = 5;
+                                    estadoAtual = aplicarVogal(estadoAtual, vogaisPosteriores[charVogal], estadoId);
+                                    ordemPosterior++;
+                                }
+                            }
+                        }
+
+                        const wrapper = document.createElement('div');
+                        wrapper.classList.add('grid-wrapper');
+                        wrapper.appendChild(createDisplayGrid(estadoAtual));
+
+                        const showCode = document.getElementById('legend-code-toggle').checked;
+                        const showText = document.getElementById('legend-text-toggle').checked;
+                        const original = originais[bIdx] || '';
+
+                        if (showCode) {
+                            const codeCap = document.createElement('div');
+                            codeCap.classList.add('grid-caption', 'grid-caption-code');
+                            codeCap.textContent = `(${bloco})`;
+                            wrapper.appendChild(codeCap);
+                        }
+                        if (showText && original) {
+                            const textCap = document.createElement('div');
+                            textCap.classList.add('grid-caption', 'grid-caption-text');
+                            textCap.textContent = original;
+                            wrapper.appendChild(textCap);
+                        }
+                        container.appendChild(wrapper);
+                    }
+                }
+            }
+        }
+
+        // Construtor Visual das Grelhas de Saída
+        function createDisplayGrid(arrayEstado) {
+            const grid = document.createElement('div');
+            grid.classList.add('grid-7x7', 'grid-display');
+
+            for (let i = 0; i < 49; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                
+                if (arrayEstado[i] === 1) cell.classList.add('active');
+                else if (arrayEstado[i] === 2) cell.classList.add('vowel-1');
+                else if (arrayEstado[i] === 3) cell.classList.add('vowel-2');
+                else if (arrayEstado[i] === 4) cell.classList.add('vowel-3');
+                else if (arrayEstado[i] === 5) cell.classList.add('vowel-4');
+                
+                grid.appendChild(cell);
+            }
+            return grid;
+        }
+
+        function loadColors() {
+            const defs = {'--bg-color':'#f4f4f9','--content-bg':'#ffffff','--grid-empty':'#e0e0e0','--grid-filled':'#2c3e50','--grid-vowel':'#e74c3c','--cell-radius':'3px','--cell-size':'30px','--cell-gap':'2px','--blocks-per-line':'6','--block-gap':'15px','--block-row-gap':'15px'};
+            for (let k in defs) {
+                const v = localStorage.getItem(k) || defs[k];
+                document.documentElement.style.setProperty(k, v);
+            }
+        }
+
+        function initColorControls() {
+            loadColors();
+            const ids = {page:'color-page', box:'color-box', empty:'color-empty', filled:'color-filled', vowel:'color-vowel'};
+            const vars = {page:'--bg-color', box:'--content-bg', empty:'--grid-empty', filled:'--grid-filled', vowel:'--grid-vowel'};
+            for (let key in ids) {
+                const inp = document.getElementById(ids[key]);
+                const varn = vars[key];
+                inp.value = getComputedStyle(document.documentElement).getPropertyValue(varn).trim();
+                inp.addEventListener('input', () => {
+                    document.documentElement.style.setProperty(varn, inp.value);
+                    localStorage.setItem(varn, inp.value);
+                });
+            }
+            const rs = document.getElementById('radius-slider');
+            const rv = document.getElementById('radius-val');
+            let r = getComputedStyle(document.documentElement).getPropertyValue('--cell-radius').trim() || '3px';
+            let n = parseInt(r) || 3;
+            rs.value = n;
+            rv.textContent = n;
+            rs.addEventListener('input', () => {
+                const val = rs.value + 'px';
+                document.documentElement.style.setProperty('--cell-radius', val);
+                localStorage.setItem('--cell-radius', val);
+                rv.textContent = rs.value;
+            });
+            const ss = document.getElementById('size-slider');
+            const sv = document.getElementById('size-val');
+            let s = getComputedStyle(document.documentElement).getPropertyValue('--cell-size').trim() || '30px';
+            let sn = parseInt(s) || 30;
+            ss.value = sn;
+            sv.textContent = sn;
+            ss.addEventListener('input', () => {
+                const val = ss.value + 'px';
+                document.documentElement.style.setProperty('--cell-size', val);
+                localStorage.setItem('--cell-size', val);
+                sv.textContent = ss.value;
+            });
+            const ps = document.getElementById('perline-slider');
+            const pv = document.getElementById('perline-val');
+            let p = getComputedStyle(document.documentElement).getPropertyValue('--blocks-per-line').trim() || '6';
+            let pn = parseInt(p) || 6;
+            ps.value = pn;
+            pv.textContent = pn;
+            ps.addEventListener('input', () => {
+                const val = ps.value;
+                document.documentElement.style.setProperty('--blocks-per-line', val);
+                localStorage.setItem('--blocks-per-line', val);
+                pv.textContent = ps.value;
+            });
+            const gs = document.getElementById('gap-slider');
+            const gv = document.getElementById('gap-val');
+            let g = getComputedStyle(document.documentElement).getPropertyValue('--block-gap').trim() || '15px';
+            let gn = parseInt(g) || 15;
+            gs.value = gn;
+            gv.textContent = gn;
+            gs.addEventListener('input', () => {
+                const val = gs.value + 'px';
+                document.documentElement.style.setProperty('--block-gap', val);
+                localStorage.setItem('--block-gap', val);
+                gv.textContent = gs.value;
+            });
+            const rgs = document.getElementById('row-gap-slider');
+            const rgv = document.getElementById('row-gap-val');
+            let rg = getComputedStyle(document.documentElement).getPropertyValue('--block-row-gap').trim() || '15px';
+            let rgn = parseInt(rg) || 15;
+            rgs.value = rgn;
+            rgv.textContent = rgn;
+            rgs.addEventListener('input', () => {
+                const val = rgs.value + 'px';
+                document.documentElement.style.setProperty('--block-row-gap', val);
+                localStorage.setItem('--block-row-gap', val);
+                rgv.textContent = rgs.value;
+            });
+            const is = document.getElementById('internal-slider');
+            const iv = document.getElementById('internal-val');
+            let ig = getComputedStyle(document.documentElement).getPropertyValue('--cell-gap').trim() || '2px';
+            let ign = parseInt(ig) || 2;
+            is.value = ign;
+            iv.textContent = ign;
+            is.addEventListener('input', () => {
+                const val = is.value + 'px';
+                document.documentElement.style.setProperty('--cell-gap', val);
+                localStorage.setItem('--cell-gap', val);
+                iv.textContent = is.value;
+            });
+            const codeToggle = document.getElementById('legend-code-toggle');
+            const codeStored = localStorage.getItem('show-legend-code');
+            if (codeStored !== null) codeToggle.checked = codeStored === 'true';
+            codeToggle.addEventListener('change', () => {
+                localStorage.setItem('show-legend-code', codeToggle.checked);
+                if (document.getElementById('text-input').value) renderText();
+            });
+
+            const textToggle = document.getElementById('legend-text-toggle');
+            const textStored = localStorage.getItem('show-legend-text');
+            if (textStored !== null) textToggle.checked = textStored === 'true';
+            textToggle.addEventListener('change', () => {
+                localStorage.setItem('show-legend-text', textToggle.checked);
+                if (document.getElementById('text-input').value) renderText();
+            });
+        }
+
+        function resetColors() {
+            const defs = {'--bg-color':'#f4f4f9','--content-bg':'#ffffff','--grid-empty':'#e0e0e0','--grid-filled':'#2c3e50','--grid-vowel':'#e74c3c','--cell-radius':'3px','--cell-size':'30px','--cell-gap':'2px','--blocks-per-line':'6','--block-gap':'15px','--block-row-gap':'15px'};
+            for (let k in defs) {
+                document.documentElement.style.setProperty(k, defs[k]);
+                localStorage.removeItem(k);
+            }
+            document.getElementById('color-page').value = defs['--bg-color'];
+            document.getElementById('color-box').value = defs['--content-bg'];
+            document.getElementById('color-empty').value = defs['--grid-empty'];
+            document.getElementById('color-filled').value = defs['--grid-filled'];
+            document.getElementById('color-vowel').value = defs['--grid-vowel'];
+            document.getElementById('radius-slider').value = 3;
+            document.getElementById('radius-val').textContent = 3;
+            document.getElementById('size-slider').value = 30;
+            document.getElementById('size-val').textContent = 30;
+            document.getElementById('perline-slider').value = 6;
+            document.getElementById('perline-val').textContent = 6;
+            document.getElementById('gap-slider').value = 15;
+            document.getElementById('gap-val').textContent = 15;
+            document.getElementById('row-gap-slider').value = 15;
+            document.getElementById('row-gap-val').textContent = 15;
+            document.getElementById('internal-slider').value = 2;
+            document.getElementById('internal-val').textContent = 2;
+        }
+
+        function exportBlocks() {
+            const container = document.getElementById('word-container');
+            if (!container || !container.children.length) { alert('Nada para exportar'); return; }
+            const format = document.getElementById('export-format').value;
+const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
+             const cellSizeVal = isNaN(cellSize) ? 30 : cellSize;
+             const blockGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--block-gap'));
+             const blockGapVal = isNaN(blockGap) ? 15 : blockGap;
+             const rowGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--block-row-gap'));
+             const rowGapVal = isNaN(rowGap) ? 15 : rowGap;
+             const blocksPerLine = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--blocks-per-line'));
+             const blocksPerLineVal = isNaN(blocksPerLine) ? 6 : blocksPerLine;
+             const wrappers = Array.from(container.querySelectorAll('.grid-wrapper'));
+             const grids = wrappers.map(w => w.querySelector('.grid-7x7'));
+             const innerGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-gap'));
+             const innerGapVal = isNaN(innerGap) ? 2 : innerGap;
+             const gridPixelSize = 7 * cellSizeVal + 6 * innerGapVal;
+             const captionH = 14;
+             const showCode = document.getElementById('legend-code-toggle').checked;
+             const showText = document.getElementById('legend-text-toggle').checked;
+             const captionLines = (showCode ? 1 : 0) + (showText ? 1 : 0);
+             const captionHeight = captionLines * captionH;
+             const cols = blocksPerLineVal;
+             const rows = Math.ceil(grids.length / cols);
+             const canvasW = cols * gridPixelSize + (cols - 1) * blockGapVal;
+             const canvasH = rows * (gridPixelSize + captionHeight) + (rows - 1) * rowGapVal;
+             const bg = getComputedStyle(document.documentElement).getPropertyValue('--content-bg').trim() || '#fff';
+             const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#333';
+
+             const inputText = document.getElementById('text-input').value.trim() || 'blocos';
+             const baseName = inputText.replace(/[\\/:*?"<>|]/g, '_');
+
+             if (format === 'svg') {
+                 let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}" viewBox="0 0 ${canvasW} ${canvasH}">`;
+                 svg += `<rect width="${canvasW}" height="${canvasH}" fill="${bg}"/>`;
+                 grids.forEach((gridEl, idx) => {
+                     const r = Math.floor(idx / cols);
+                     const c = idx % cols;
+                     const ox = c * (gridPixelSize + blockGapVal);
+                     const oy = r * (gridPixelSize + captionHeight) + r * rowGapVal;
+                     const wrapper = wrappers[idx];
+                     const codeText = showCode ? (wrapper.querySelector('.grid-caption-code')?.textContent || '') : '';
+                     const textText = showText ? (wrapper.querySelector('.grid-caption-text')?.textContent || '') : '';
+                     const cells = gridEl.querySelectorAll('.cell');
+                     cells.forEach((cell, i) => {
+                         const cx = ox + (i % 7) * (cellSizeVal + innerGapVal);
+                         const cy = oy + Math.floor(i / 7) * (cellSizeVal + innerGapVal);
+                         const style = getComputedStyle(cell);
+                         const fill = style.backgroundColor;
+                         svg += `<rect x="${cx}" y="${cy}" width="${cellSizeVal}" height="${cellSizeVal}" fill="${fill}"/>`;
+                         if (cell.classList.contains('vowel-2') || cell.classList.contains('vowel-3') || cell.classList.contains('vowel-4')) {
+                             const border = style.borderColor || '#e74c3c';
+                             svg += `<rect x="${cx}" y="${cy}" width="${cellSizeVal}" height="${cellSizeVal}" fill="none" stroke="${border}" stroke-width="3"/>`;
+                         }
+                         if (cell.classList.contains('vowel-3') || cell.classList.contains('vowel-4')) {
+                             const vcol = style.borderColor || '#e74c3c';
+                             svg += `<line x1="${cx}" y1="${cy}" x2="${cx+cellSizeVal}" y2="${cy+cellSizeVal}" stroke="${vcol}" stroke-width="2"/>`;
+                         }
+                         if (cell.classList.contains('vowel-4')) {
+                             const vcol = style.borderColor || '#e74c3c';
+                             svg += `<line x1="${cx+cellSizeVal}" y1="${cy}" x2="${cx}" y2="${cy+cellSizeVal}" stroke="${vcol}" stroke-width="2"/>`;
+                         }
+                     });
+                     if (codeText) {
+                         svg += `<text x="${ox + gridPixelSize/2}" y="${oy + gridPixelSize + 12}" text-anchor="middle" font-family="monospace" font-size="12" fill="${textColor}">${codeText}</text>`;
+                     }
+                     if (textText) {
+                         const lineY = oy + gridPixelSize + (codeText ? captionH + 12 : 12);
+                         svg += `<text x="${ox + gridPixelSize/2}" y="${lineY}" text-anchor="middle" font-family="monospace" font-size="12" fill="#888" font-style="italic">${textText}</text>`;
+                     }
+                 });
+                 svg += `</svg>`;
+                 const blob = new Blob([svg], {type:'image/svg+xml'});
+                 const url = URL.createObjectURL(blob);
+                 const a = document.createElement('a');
+                 a.href = url;
+                 a.download = `${baseName}.svg`;
+                 a.click();
+                 URL.revokeObjectURL(url);
+                 return;
+             }
+             const canvas = document.createElement('canvas');
+             canvas.width = canvasW;
+             canvas.height = canvasH;
+             const ctx = canvas.getContext('2d');
+             ctx.fillStyle = bg;
+             ctx.fillRect(0, 0, canvasW, canvasH);
+             grids.forEach((gridEl, idx) => {
+                 const r = Math.floor(idx / cols);
+                 const c = idx % cols;
+                 const ox = c * (gridPixelSize + blockGapVal);
+                 const oy = r * (gridPixelSize + captionHeight) + r * rowGapVal;
+                 const wrapper = wrappers[idx];
+                 const codeText = showCode ? (wrapper.querySelector('.grid-caption-code')?.textContent || '') : '';
+                 const textText = showText ? (wrapper.querySelector('.grid-caption-text')?.textContent || '') : '';
+                 const cells = gridEl.querySelectorAll('.cell');
+                 cells.forEach((cell, i) => {
+                     const cx = ox + (i % 7) * (cellSizeVal + innerGapVal);
+                     const cy = oy + Math.floor(i / 7) * (cellSizeVal + innerGapVal);
+                     const style = getComputedStyle(cell);
+                     ctx.fillStyle = style.backgroundColor;
+                     ctx.fillRect(cx, cy, cellSizeVal, cellSizeVal);
+                     if (cell.classList.contains('vowel-2') || cell.classList.contains('vowel-3') || cell.classList.contains('vowel-4')) {
+                         ctx.strokeStyle = style.borderColor || '#e74c3c';
+                         ctx.lineWidth = 3;
+                         ctx.strokeRect(cx, cy, cellSizeVal, cellSizeVal);
+                     }
+                     if (cell.classList.contains('vowel-3') || cell.classList.contains('vowel-4')) {
+                         ctx.strokeStyle = style.borderColor || '#e74c3c';
+                         ctx.lineWidth = 2;
+                         ctx.beginPath();
+                         ctx.moveTo(cx, cy);
+                         ctx.lineTo(cx + cellSizeVal, cy + cellSizeVal);
+                         ctx.stroke();
+                     }
+                     if (cell.classList.contains('vowel-4')) {
+                         ctx.beginPath();
+                         ctx.moveTo(cx + cellSizeVal, cy);
+                         ctx.lineTo(cx, cy + cellSizeVal);
+                         ctx.stroke();
+                     }
+                 });
+                 ctx.textAlign = 'center';
+                 if (codeText) {
+                     ctx.fillStyle = textColor;
+                     ctx.font = '12px monospace';
+                     ctx.fillText(codeText, ox + gridPixelSize/2, oy + gridPixelSize + 12);
+                 }
+                 if (textText) {
+                     ctx.fillStyle = '#888';
+                     ctx.font = 'italic 12px monospace';
+                     const lineY = oy + gridPixelSize + (codeText ? captionH + 12 : 12);
+                     ctx.fillText(textText, ox + gridPixelSize/2, lineY);
+                 }
+});
+             let mime = 'image/png';
+             if (format === 'jpeg') mime = 'image/jpeg';
+             if (format === 'webp') mime = 'image/webp';
+             const url = canvas.toDataURL(mime, 0.92);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${baseName}.${format}`;
+            a.click();
+        }
+
+        // === JOGO: LÓGICA ===
+        const bancoPalavras = [
+            "gato", "rato", "pato", "foca", "cão", "lobo", "vaca", "cobra", "tigre", "leão",
+            "veado", "burro", "porco", "sapo", "grilo", "peixe", "furão", "cisne", "girafa", "pombo",
+            "cabra", "ovelha", "ganso", "raposa", "bode", "zebra", "hiena", "corvo", "lince", "lontra",
+            "orca", "rã", "toupeira", "mosca", "baleia", "tubarão", "coelho", "peru",
+            "padeiro", "pintor", "cantor", "médico", "bombeiro", "professor", "juiz",
+            "jardineiro", "pescador", "ator", "piloto", "polícia", "taxista", "carteiro",
+            "carpinteiro", "cientista", "cozinheiro", "dentista", "enfermeiro", "engenheiro",
+            "marinheiro", "mecânico", "pedreiro", "motorista", "barbeiro", "soldado",
+            "mesa", "cadeira", "livro", "caneta", "lápis", "copo", "prato", "faca", "garfo",
+            "colher", "panela", "chave", "porta", "relógio", "telefone", "almofada", "vassoura",
+            "pente", "escova", "toalha", "tesoura", "régua", "mochila", "sapato", "camisa",
+            "calça", "casaco", "boné", "óculos", "mala", "lanterna", "martelo", "prego",
+            "escada", "balde", "tapete", "cortina", "travesseiro", "cobertor", "frigideira",
+            "computador", "tablet", "bule", "sacola", "anel", "pulseira", "brinco",
+            "bom dia", "boa tarde", "tudo bem", "como vai", "obrigado", "até logo",
+            "por favor", "com licença", "feliz natal", "bom ano"
+        ];
+
+        let palavraAtual = "";
+        let inputAtual = "";
+
+        function pickPalavra() {
+            return bancoPalavras[Math.floor(Math.random() * bancoPalavras.length)];
+        }
+
+        function novaPalavra() {
+            palavraAtual = pickPalavra();
+            inputAtual = converterTextoParaSistemaMajor(palavraAtual);
+            document.getElementById('game-input').value = '';
+            document.getElementById('game-feedback').textContent = '';
+            document.getElementById('game-feedback').className = 'game-feedback';
+            document.getElementById('game-solution').textContent = '';
+            renderGameBlocks();
+        }
+
+        function renderGameBlocks() {
+            const container = document.getElementById('game-blocks');
+            container.innerHTML = '';
+
+            const blocos = inputAtual.match(/[A-Z]*[0-9][A-Z]*/g) || [];
+
+            for (let bloco of blocos) {
+                let numIndex = -1;
+                for (let i = 0; i < bloco.length; i++) {
+                    if (dicionario[bloco[i]]) {
+                        numIndex = i;
+                        break;
+                    }
+                }
+
+                if (numIndex !== -1) {
+                    let charNum = bloco[numIndex];
+                    let estadoAtual = [...dicionario[charNum]];
+
+                    let ordemAnterior = 0;
+                    let ordemPosterior = 0;
+
+                    for (let i = 0; i < bloco.length; i++) {
+                        if (i === numIndex) continue;
+
+                        let charVogal = bloco[i];
+
+                        if (i < numIndex) {
+                            if (vogaisAnteriores[charVogal]) {
+                                let estadoId = 2 + ordemAnterior;
+                                if (estadoId > 5) estadoId = 5;
+                                estadoAtual = aplicarVogal(estadoAtual, vogaisAnteriores[charVogal], estadoId);
+                                ordemAnterior++;
+                            }
+                        } else {
+                            if (vogaisPosteriores[charVogal]) {
+                                let estadoId = 2 + ordemPosterior;
+                                if (estadoId > 5) estadoId = 5;
+                                estadoAtual = aplicarVogal(estadoAtual, vogaisPosteriores[charVogal], estadoId);
+                                ordemPosterior++;
+                            }
+                        }
+                    }
+
+                    const wrapper = document.createElement('div');
+                    wrapper.classList.add('grid-wrapper');
+                    wrapper.appendChild(createDisplayGrid(estadoAtual));
+                    container.appendChild(wrapper);
+                }
+            }
+        }
+
+        function verificarResposta() {
+            const resposta = document.getElementById('game-input').value.trim();
+            const fb = document.getElementById('game-feedback');
+
+            if (!palavraAtual) {
+                fb.textContent = 'Clica em "Nova Palavra" primeiro.';
+                fb.className = 'game-feedback lose';
+                return;
+            }
+
+            if (!resposta) {
+                fb.textContent = 'Escreve uma resposta.';
+                fb.className = 'game-feedback lose';
+                return;
+            }
+
+            if (resposta.toLowerCase() === palavraAtual.toLowerCase()) {
+                fb.textContent = 'Correto! Ganhaste!';
+                fb.className = 'game-feedback win';
+            } else {
+                fb.textContent = 'Incorreto. Tenta de novo!';
+                fb.className = 'game-feedback lose';
+            }
+        }
+
+        function mostrarSolucao() {
+            if (!palavraAtual) {
+                document.getElementById('game-solution').textContent = 'Clica em "Nova Palavra" primeiro.';
+                return;
+            }
+            document.getElementById('game-solution').textContent = `Solução: ${palavraAtual}`;
+        }
+
+        // Inicia o jogo com uma palavra aleatória
+        novaPalavra();
+
+        // === FIM DO JOGO ===
+
+        initEditor();
+        initColorControls();
+
+    </script>
+</body>
+</html>

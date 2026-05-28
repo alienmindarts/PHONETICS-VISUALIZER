@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Processador de Texto - Alfabeto Visual Major</title>
+    <style>
+        :root {
+            --cor-fundo-celula: #121212;
+            --cor-linha-vogal: #2196F3;
+            --cor-consoante: #4CAF50;
+            --cor-grelha: #2a2a2a;
+            --opacidade-rampa: 0.2;
+            --raio-borda: 0px;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            padding: 2rem 3rem;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        h1 { font-size: 1.5rem; font-weight: normal; margin-bottom: 1rem; color: #aaa; text-align: center; }
+
+        #painelControlos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            padding: 12px 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .controlo-cor {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .controlo-cor label {
+            font-size: 0.7rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .controlo-cor input[type="color"] {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #555;
+            border-radius: 6px;
+            background: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .controlo-cor input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .controlo-cor input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 4px;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            max-width: 800px;
+            padding: 15px 20px;
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            background: #2d2d2d;
+            border: 2px solid #444;
+            color: #fff;
+            border-radius: 8px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus { border-color: #2196F3; }
+
+        #containerTexto {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .espaco-palavra {
+            width: 30px;
+        }
+
+        svg {
+            background-color: var(--cor-fundo-celula);
+            border: 1px solid #333;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            border-radius: var(--raio-borda);
+        }
+
+        .linha-grelha { stroke: var(--cor-grelha); stroke-width: 1; }
+        .bloco-consoante { fill: var(--cor-consoante); }
+        .linha-vogal { stroke: var(--cor-linha-vogal); stroke-width: 2; stroke-linecap: butt; }
+        .rampa-vogal { fill: var(--cor-linha-vogal); opacity: var(--opacidade-rampa); stroke: none; }
+
+        .controlo-slider {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 120px;
+        }
+
+        .controlo-slider label {
+            font-size: 0.7rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .controlo-slider input[type="range"] {
+            width: 100%;
+            accent-color: #2196F3;
+        }
+
+        .controlo-slider span {
+            font-size: 0.65rem;
+            color: #888;
+        }
+        .contorno-bordas-arredondamento {
+            border-radius: var(--raio-borda);
+        }
+
+        .controlo-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 4px;
+        }
+
+        .controlo-toggle label {
+            font-size: 0.7rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .controlo-toggle input[type="checkbox"] {
+            display: none;
+        }
+
+        .toggle-switch {
+            width: 36px;
+            height: 20px;
+            background: #555;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+
+        .controlo-toggle input:checked + .toggle-switch {
+            background: #2196F3;
+        }
+
+        .controlo-toggle input:checked + .toggle-switch::after {
+            transform: translateX(16px);
+        }
+
+        .bloco-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legenda-bloco {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .select-export {
+            padding: 6px 10px;
+            background: #333;
+            color: #ccc;
+            border: 1px solid #555;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .select-export:focus {
+            border-color: #2196F3;
+        }
+
+        .btn-export {
+            padding: 6px 16px;
+            background: #2196F3;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
+        }
+
+        .btn-export:hover {
+            background: #1976D2;
+        }
+
+        .btn-export:active {
+            background: #1565C0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Escreve texto natural ou números</h1>
+    
+    <div id="painelControlos">
+        <div class="controlo-cor">
+            <input type="color" id="corFundoCelula" value="#121212">
+            <label for="corFundoCelula">Fundo</label>
+        </div>
+        <div class="controlo-cor">
+            <input type="color" id="corGrelha" value="#2a2a2a">
+            <label for="corGrelha">Grelha</label>
+        </div>
+        <div class="controlo-cor">
+            <input type="color" id="corConsoante" value="#4CAF50">
+            <label for="corConsoante">Consoantes</label>
+        </div>
+        <div class="controlo-cor">
+            <input type="color" id="corLinhaVogal" value="#2196F3">
+            <label for="corLinhaVogal">Vogais</label>
+        </div>
+        <div class="controlo-slider">
+            <label for="sliderCurvatura">Curvatura</label>
+            <input type="range" id="sliderCurvatura" min="0" max="100" value="50">
+            <span id="valorCurvatura">50%</span>
+        </div>
+        <div class="controlo-slider">
+            <label for="sliderOpacidade">Transparência</label>
+            <input type="range" id="sliderOpacidade" min="0" max="100" value="20">
+            <span id="valorOpacidade">20%</span>
+        </div>
+        <div class="controlo-slider">
+            <label for="sliderArredondamento">Arredondamento</label>
+            <input type="range" id="sliderArredondamento" min="0" max="50" value="0">
+            <span id="valorArredondamento">0px</span>
+        </div>
+        <div class="controlo-toggle">
+            <input type="checkbox" id="toggleInput" checked>
+            <label for="toggleInput" class="toggle-switch"></label>
+            <label for="toggleInput">Input</label>
+        </div>
+        <div class="controlo-toggle">
+            <input type="checkbox" id="toggleLegenda" checked>
+            <label for="toggleLegenda" class="toggle-switch"></label>
+            <label for="toggleLegenda">Legendas</label>
+        </div>
+        <div class="controlo-toggle">
+            <input type="checkbox" id="toggleFundoTransparente">
+            <label for="toggleFundoTransparente" class="toggle-switch"></label>
+            <label for="toggleFundoTransparente">Fundo Transparente</label>
+        </div>
+        <select id="formatoExportacao" class="select-export" title="Formato de exportação">
+            <option value="png">PNG</option>
+            <option value="jpeg">JPEG</option>
+            <option value="svg">SVG</option>
+            <option value="webp">WEBP</option>
+        </select>
+        <button id="btnExportar" class="btn-export" title="Exportar blocos como imagem">Exportar</button>
+    </div>
+
+    <input type="text" id="inputTexto" placeholder="Ex: Gato 123 Uva" autocomplete="off">
+    
+    <div id="containerTexto"></div>
+
+    <canvas id="canvasExportacao" style="display:none;"></canvas>
+
+    <script>
+        const containerTexto = document.getElementById('containerTexto');
+        const inputTexto = document.getElementById('inputTexto');
+        
+        const TAMANHO_CELULA = 20; 
+        const COLUNAS = 9;
+        const LINHAS = 9;
+        const LARGURA_SVG = COLUNAS * TAMANHO_CELULA;
+        const ALTURA_SVG = LINHAS * TAMANHO_CELULA;
+        
+        const posicaoColuna = { 'A': 0, 'E': 1, 'I': 2, 'O': 3, 'U': 4 };
+
+        // 1. TOKENIZADOR (preserva texto original, deteta dígrafos)
+        function tokenizar(textoOriginal) {
+            let preprocessed = '';
+            let segments = [];
+
+            for (let i = 0; i < textoOriginal.length; i++) {
+                const ch = textoOriginal[i];
+                if (ch === '\u00E7' || ch === '\u00C7') {
+                    preprocessed += '0';
+                    segments.push(ch);
+                } else {
+                    const upper = ch.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    for (let j = 0; j < upper.length; j++) {
+                        segments.push(ch);
+                        preprocessed += upper[j];
+                    }
+                }
+            }
+
+            const tokens = [];
+            let i = 0;
+
+            const DIGRAFOS = { 'CH': '6', 'LH': '5', 'NH': '2', 'RR': '4' };
+            const SUAVES = { 'CE': '0E', 'CI': '0I', 'GE': '6E', 'GI': '6I' };
+            const CONSOANTES = {
+                'S': '0', 'Z': '0', 'T': '1', 'D': '1', 'N': '2', 'M': '3',
+                'R': '4', 'L': '5', 'J': '6', 'X': '6',
+                'K': '7', 'Q': '7', 'C': '7', 'G': '7',
+                'F': '8', 'V': '8', 'P': '9', 'B': '9'
+            };
+
+            while (i < preprocessed.length) {
+                const c = preprocessed[i];
+
+                if (i + 1 < preprocessed.length) {
+                    const pair = preprocessed.substr(i, 2);
+                    if (DIGRAFOS[pair] !== undefined) {
+                        tokens.push({ orig: segments[i] + segments[i + 1], phonetic: DIGRAFOS[pair] });
+                        i += 2;
+                        continue;
+                    }
+                    if (SUAVES[pair] !== undefined) {
+                        tokens.push({ orig: segments[i] + segments[i + 1], phonetic: SUAVES[pair] });
+                        i += 2;
+                        continue;
+                    }
+                }
+
+                if (c === 'Y') {
+                    tokens.push({ orig: segments[i], phonetic: 'I' });
+                    i++;
+                    continue;
+                }
+
+                if (CONSOANTES[c] !== undefined) {
+                    tokens.push({ orig: segments[i], phonetic: CONSOANTES[c] });
+                    i++;
+                    continue;
+                }
+
+                if (/[AEIOU]/.test(c)) {
+                    tokens.push({ orig: segments[i], phonetic: c });
+                    i++;
+                    continue;
+                }
+
+                if (/[0-9]/.test(c)) {
+                    tokens.push({ orig: segments[i], phonetic: c });
+                    i++;
+                    continue;
+                }
+
+                i++;
+            }
+
+            return tokens;
+        }
+
+        // 2. AGRUPADOR DE SÍLABAS/BLOCOS (com textoOriginal)
+        function agruparEmBlocos(tokens) {
+            const blocos = [];
+            let blocoAtual = { vogaisAnteriores: [], consoante: null, vogaisPosteriores: [], textoOriginal: '' };
+            let lendoPosteriores = false;
+
+            function finalizarBloco() {
+                if (blocoAtual.consoante !== null) {
+                    blocos.push(blocoAtual);
+                    blocoAtual = { vogaisAnteriores: [], consoante: null, vogaisPosteriores: [], textoOriginal: '' };
+                }
+            }
+
+            for (const token of tokens) {
+                for (let j = 0; j < token.phonetic.length; j++) {
+                    const char = token.phonetic[j];
+                    const orig = (j === 0) ? token.orig : '';
+
+                    if (/[0-9]/.test(char)) {
+                        if (blocoAtual.consoante !== null) {
+                            finalizarBloco();
+                        }
+                        blocoAtual.consoante = parseInt(char, 10);
+                        blocoAtual.textoOriginal += orig;
+                        lendoPosteriores = true;
+                    } else if (/[AEIOU]/.test(char)) {
+                        if (!lendoPosteriores) {
+                            blocoAtual.vogaisAnteriores.push(char);
+                        } else {
+                            blocoAtual.vogaisPosteriores.push(char);
+                        }
+                        blocoAtual.textoOriginal += orig;
+                    }
+                }
+            }
+
+            finalizarBloco();
+            return blocos;
+        }
+
+        // --- LÓGICA DE DESENHO SVG ---
+        function criarElementoSVG(tipo, atributos) {
+            const el = document.createElementNS("http://www.w3.org/2000/svg", tipo);
+            for (let chave in atributos) {
+                el.setAttribute(chave, atributos[chave]);
+            }
+            return el;
+        }
+
+        function desenharGrelhaBase(svg) {
+            for (let i = 0; i <= COLUNAS; i++) {
+                svg.appendChild(criarElementoSVG('line', {
+                    x1: i * TAMANHO_CELULA, y1: 0,
+                    x2: i * TAMANHO_CELULA, y2: ALTURA_SVG,
+                    class: 'linha-grelha'
+                }));
+            }
+            for (let i = 0; i <= LINHAS; i++) {
+                svg.appendChild(criarElementoSVG('line', {
+                    x1: 0, y1: i * TAMANHO_CELULA,
+                    x2: LARGURA_SVG, y2: i * TAMANHO_CELULA,
+                    class: 'linha-grelha'
+                }));
+            }
+        }
+
+        function processarVogais(listaVogais) {
+            const alturasFinais = { 'A': 0, 'E': 0, 'I': 0, 'O': 0, 'U': 0 };
+            listaVogais.forEach((vogal, index) => {
+                const v = vogal.toUpperCase();
+                if (alturasFinais.hasOwnProperty(v)) {
+                    if ((index + 1) > alturasFinais[v]) {
+                        alturasFinais[v] = index + 1;
+                    }
+                }
+            });
+            return alturasFinais;
+        }
+
+        function criarBlocoSvg(dados, curvatura) {
+            const svg = criarElementoSVG('svg', {
+                width: LARGURA_SVG,
+                height: ALTURA_SVG,
+                viewBox: `0 0 ${LARGURA_SVG} ${ALTURA_SVG}`
+            });
+
+            desenharGrelhaBase(svg);
+
+            const alturasAnt = processarVogais(dados.vogaisAnteriores);
+            const yOrigemAnt = 4 * TAMANHO_CELULA;
+            const alturasPost = processarVogais(dados.vogaisPosteriores);
+            const yOrigemPost = 5 * TAMANHO_CELULA;
+
+            for (let vogal in alturasAnt) {
+                    if (alturasAnt[vogal] > 0) {
+                        const x = posicaoColuna[vogal] * TAMANHO_CELULA;
+                        const topY = yOrigemAnt - (alturasAnt[vogal] * TAMANHO_CELULA);
+                        const bx = x + TAMANHO_CELULA;
+                        const by = 4 * TAMANHO_CELULA;
+
+                        const mx = (x + bx) / 2;
+                        const my = (topY + by) / 2;
+                        const coeff = (curvatura - 0.5);
+                        const distY = Math.abs(by - topY);
+                        const distX = TAMANHO_CELULA;
+                        const cx = mx + coeff * (distY * 0.5 + distX);
+                        const cy = my - coeff * distX * 0.8;
+
+                        const d = `M ${x} ${topY} Q ${cx} ${cy}, ${bx} ${by} L ${x} ${by} Z`;
+                        svg.appendChild(criarElementoSVG('path', { d: d, class: 'rampa-vogal' }));
+                    }
+                }
+
+                for (let vogal in alturasPost) {
+                    if (alturasPost[vogal] > 0) {
+                        const x = posicaoColuna[vogal] * TAMANHO_CELULA;
+                        const bottomY = yOrigemPost + (alturasPost[vogal] * TAMANHO_CELULA);
+                        const bx = x + TAMANHO_CELULA;
+                        const by = 5 * TAMANHO_CELULA;
+
+                        const mx = (x + bx) / 2;
+                        const my = (bottomY + by) / 2;
+                        const coeff = (curvatura - 0.5);
+                        const distY = Math.abs(by - bottomY);
+                        const distX = TAMANHO_CELULA;
+                        const cx = mx + coeff * (distY * 0.5 + distX);
+                        const cy = my + coeff * distX * 0.8;
+
+                        const d = `M ${x} ${bottomY} Q ${cx} ${cy}, ${bx} ${by} L ${x} ${by} Z`;
+                        svg.appendChild(criarElementoSVG('path', { d: d, class: 'rampa-vogal' }));
+                    }
+                }
+
+            for (let i = 0; i < dados.consoante; i++) {
+                svg.appendChild(criarElementoSVG('rect', {
+                    x: i * TAMANHO_CELULA,
+                    y: 4 * TAMANHO_CELULA,
+                    width: TAMANHO_CELULA,
+                    height: TAMANHO_CELULA,
+                    class: 'bloco-consoante',
+                    rx: raioBorda,
+                    ry: raioBorda
+                }));
+            }
+
+            for (let vogal in alturasAnt) {
+                if (alturasAnt[vogal] > 0) {
+                    const x = posicaoColuna[vogal] * TAMANHO_CELULA;
+                    svg.appendChild(criarElementoSVG('line', {
+                        x1: x, y1: yOrigemAnt,
+                        x2: x, y2: yOrigemAnt - (alturasAnt[vogal] * TAMANHO_CELULA),
+                        class: 'linha-vogal'
+                    }));
+                }
+            }
+
+            for (let vogal in alturasPost) {
+                if (alturasPost[vogal] > 0) {
+                    const x = posicaoColuna[vogal] * TAMANHO_CELULA;
+                    svg.appendChild(criarElementoSVG('line', {
+                        x1: x, y1: yOrigemPost,
+                        x2: x, y2: yOrigemPost + (alturasPost[vogal] * TAMANHO_CELULA),
+                        class: 'linha-vogal'
+                    }));
+                }
+            }
+
+            return svg;
+        }
+
+        // --- MOTOR PRINCIPAL ---
+        function atualizarTexto() {
+            containerTexto.innerHTML = ''; 
+            
+            const curvatura = parseInt(document.getElementById('sliderCurvatura').value) / 100;
+            document.getElementById('valorCurvatura').textContent = Math.round(curvatura * 100) + '%';
+
+            const palavras = inputTexto.value.split(/\s+/);
+
+            palavras.forEach((palavra, index) => {
+                if (palavra.length > 0) {
+                    const tokens = tokenizar(palavra);
+                    const blocos = agruparEmBlocos(tokens);
+
+                    blocos.forEach(bloco => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'bloco-wrapper';
+
+                        const novoSvg = criarBlocoSvg(bloco, curvatura);
+                        wrapper.appendChild(novoSvg);
+
+                        const legenda = document.createElement('div');
+                        legenda.className = 'legenda-bloco';
+                        legenda.textContent = bloco.textoOriginal;
+                        wrapper.appendChild(legenda);
+
+                        containerTexto.appendChild(wrapper);
+                    });
+
+                    if (index < palavras.length - 1) {
+                        const espaco = document.createElement('div');
+                        espaco.className = 'espaco-palavra';
+                        containerTexto.appendChild(espaco);
+                    }
+                }
+            });
+        }
+
+        inputTexto.addEventListener('input', atualizarTexto);
+
+        const raiz = document.documentElement;
+        let raioBorda = 0;
+
+        document.getElementById('corFundoCelula').addEventListener('input', function() {
+            raiz.style.setProperty('--cor-fundo-celula', this.value);
+        });
+
+        document.getElementById('corGrelha').addEventListener('input', function() {
+            raiz.style.setProperty('--cor-grelha', this.value);
+        });
+
+        document.getElementById('corConsoante').addEventListener('input', function() {
+            raiz.style.setProperty('--cor-consoante', this.value);
+        });
+
+        document.getElementById('corLinhaVogal').addEventListener('input', function() {
+            raiz.style.setProperty('--cor-linha-vogal', this.value);
+        });
+
+        document.getElementById('sliderCurvatura').addEventListener('input', atualizarTexto);
+
+        document.getElementById('sliderOpacidade').addEventListener('input', function() {
+            const val = parseInt(this.value) / 100;
+            raiz.style.setProperty('--opacidade-rampa', val);
+            document.getElementById('valorOpacidade').textContent = this.value + '%';
+        });
+
+        document.getElementById('sliderArredondamento').addEventListener('input', function() {
+            raioBorda = parseInt(this.value);
+            raiz.style.setProperty('--raio-borda', raioBorda + 'px');
+            document.getElementById('valorArredondamento').textContent = raioBorda + 'px';
+            atualizarTexto();
+        });
+
+        document.getElementById('toggleInput').addEventListener('change', function() {
+            inputTexto.style.display = this.checked ? '' : 'none';
+        });
+
+        document.getElementById('toggleLegenda').addEventListener('change', function() {
+            document.querySelectorAll('.legenda-bloco').forEach(el => {
+                el.style.display = this.checked ? '' : 'none';
+            });
+        });
+
+        function obterEstilosComputados() {
+            const estilo = getComputedStyle(document.documentElement);
+            return {
+                corFundoCelula: estilo.getPropertyValue('--cor-fundo-celula').trim(),
+                corLinhaVogal: estilo.getPropertyValue('--cor-linha-vogal').trim(),
+                corConsoante: estilo.getPropertyValue('--cor-consoante').trim(),
+                corGrelha: estilo.getPropertyValue('--cor-grelha').trim(),
+                opacidadeRampa: estilo.getPropertyValue('--opacidade-rampa').trim(),
+                raioBorda: estilo.getPropertyValue('--raio-borda').trim()
+            };
+        }
+
+        function svgParaStringComEstilos(svgEl, estilos, legenda) {
+            const clone = svgEl.cloneNode(true);
+            const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+            style.textContent =
+                `.linha-grelha { stroke: ${estilos.corGrelha}; stroke-width: 1; }\n` +
+                `.bloco-consoante { fill: ${estilos.corConsoante}; }\n` +
+                `.linha-vogal { stroke: ${estilos.corLinhaVogal}; stroke-width: 2; stroke-linecap: butt; }\n` +
+                `.rampa-vogal { fill: ${estilos.corLinhaVogal}; opacity: ${estilos.opacidadeRampa}; stroke: none; }`;
+            clone.insertBefore(style, clone.firstChild);
+
+            const fundo = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            fundo.setAttribute('x', '0');
+            fundo.setAttribute('y', '0');
+            fundo.setAttribute('width', LARGURA_SVG);
+            fundo.setAttribute('height', ALTURA_SVG);
+            fundo.setAttribute('fill', estilos.corFundoCelula);
+            if (estilos.raioBorda !== '0px') {
+                fundo.setAttribute('rx', estilos.raioBorda);
+                fundo.setAttribute('ry', estilos.raioBorda);
+            }
+            clone.insertBefore(fundo, style.nextSibling);
+
+            if (legenda) {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', LARGURA_SVG / 2);
+                text.setAttribute('y', ALTURA_SVG + 14);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#888');
+                text.setAttribute('font-size', '11');
+                text.setAttribute('font-family', 'system-ui, sans-serif');
+                text.textContent = legenda;
+                clone.appendChild(text);
+                clone.setAttribute('height', ALTURA_SVG + 22);
+                clone.setAttribute('viewBox', `0 0 ${LARGURA_SVG} ${ALTURA_SVG + 22}`);
+            }
+            return new XMLSerializer().serializeToString(clone);
+        }
+
+        function criarSpritesheet(svgs, legendas, callback) {
+            const estilos = obterEstilosComputados();
+            const gap = 15;
+            const raio = parseInt(estilos.raioBorda) || 0;
+            const mostrarLegendas = document.getElementById('toggleLegenda').checked && legendas.length > 0;
+            const legendaH = mostrarLegendas ? 22 : 0;
+
+            const svgEls = [];
+            const promises = [];
+
+            for (let i = 0; i < svgs.length; i++) {
+                const svg = svgs[i];
+                const leg = mostrarLegendas ? legendas[i] : null;
+                promises.push(new Promise((resolve) => {
+                    const str = svgParaStringComEstilos(svg, estilos, leg);
+                    const blob = new Blob([str], { type: 'image/svg+xml;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const img = new Image();
+                    img.onload = () => {
+                        const svgH = ALTURA_SVG + (legendaH > 0 ? legendaH : 0);
+                        svgEls.push({
+                            img: img,
+                            w: LARGURA_SVG + raio * 2,
+                            h: svgH + raio * 2
+                        });
+                        URL.revokeObjectURL(url);
+                        resolve();
+                    };
+                    img.src = url;
+                }));
+            }
+
+            Promise.all(promises).then(() => {
+                const cols = Math.min(svgEls.length, 8);
+                const rows = Math.ceil(svgEls.length / cols);
+                const cellW = LARGURA_SVG + raio * 2;
+                const cellH = ALTURA_SVG + legendaH + raio * 2;
+                const totalW = cols * cellW + (cols - 1) * gap + gap * 2;
+                const totalH = rows * cellH + (rows - 1) * gap + gap * 2;
+
+                const canvas = document.getElementById('canvasExportacao');
+                canvas.width = totalW;
+                canvas.height = totalH;
+                const ctx = canvas.getContext('2d');
+                const fundoTransparente = document.getElementById('toggleFundoTransparente').checked;
+                if (!fundoTransparente) {
+                    ctx.fillStyle = '#1e1e1e';
+                    ctx.fillRect(0, 0, totalW, totalH);
+                }
+
+                svgEls.forEach((item, i) => {
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    const x = gap + col * (cellW + gap);
+                    const y = gap + row * (cellH + gap);
+                    ctx.drawImage(item.img, x, y, cellW, cellH);
+                });
+
+                callback(canvas);
+            });
+        }
+
+        function nomeBaseFicheiro() {
+            const raw = inputTexto.value.trim().replace(/\s+/g, '_');
+            return raw.length > 0 ? raw : 'blocos-visuais';
+        }
+
+        document.getElementById('btnExportar').addEventListener('click', function() {
+            const formato = document.getElementById('formatoExportacao').value;
+            const wrappers = containerTexto.querySelectorAll('.bloco-wrapper');
+            const svgs = [];
+            const legendas = [];
+            wrappers.forEach(w => {
+                const s = w.querySelector('svg');
+                const l = w.querySelector('.legenda-bloco');
+                if (s) { svgs.push(s); legendas.push(l ? l.textContent : ''); }
+            });
+
+            if (svgs.length === 0) return;
+
+            const nomeBase = nomeBaseFicheiro();
+
+            if (formato === 'svg') {
+                exportarSVG(svgs, legendas, nomeBase);
+            } else {
+                criarSpritesheet(svgs, legendas, function(canvas) {
+                    const mime = { png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp' }[formato];
+                    const qualidade = (formato === 'jpeg' || formato === 'webp') ? 0.95 : undefined;
+
+                    canvas.toBlob(function(blob) {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = nomeBase + '.' + formato;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    }, mime, qualidade);
+                });
+            }
+        });
+
+        function exportarSVG(svgs, legendas, nomeBase) {
+            const estilos = obterEstilosComputados();
+            const mostrarLegendas = document.getElementById('toggleLegenda').checked;
+            let partes = [];
+            svgs.forEach((svg, i) => {
+                const leg = mostrarLegendas ? legendas[i] : null;
+                partes.push(svgParaStringComEstilos(svg, estilos, leg));
+            });
+
+            const downloadPartes = (idx) => {
+                if (idx >= partes.length) return;
+                const blob = new Blob([partes[idx]], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = svgs.length === 1 ? nomeBase + '.svg' : nomeBase + '_' + (idx + 1) + '.svg';
+                a.click();
+                URL.revokeObjectURL(url);
+                setTimeout(() => downloadPartes(idx + 1), 100);
+            };
+            downloadPartes(0);
+        }
+    </script>
+</body>
+</html>
