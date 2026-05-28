@@ -774,7 +774,15 @@
         function loadColors() {
             const defs = {'--bg-color':'#f4f4f9','--content-bg':'#ffffff','--grid-empty':'#e0e0e0','--grid-filled':'#2c3e50','--grid-vowel':'#e74c3c','--cell-radius':'3px','--cell-size':'30px','--cell-gap':'2px','--blocks-per-line':'6','--block-gap':'15px','--block-row-gap':'15px'};
             for (let k in defs) {
-                const v = localStorage.getItem(k) || defs[k];
+                let v = localStorage.getItem(k) || defs[k];
+                if (k === '--blocks-per-line') {
+                    let num = parseInt(v);
+                    if (isNaN(num) || num < 1 || num > 15) v = defs[k];
+                }
+                if (k === '--block-gap' || k === '--block-row-gap') {
+                    let num = parseInt(v);
+                    if (isNaN(num) || num < 0 || num > 40) v = defs[k];
+                }
                 document.documentElement.style.setProperty(k, v);
             }
         }
@@ -790,12 +798,14 @@
                 inp.addEventListener('input', () => {
                     document.documentElement.style.setProperty(varn, inp.value);
                     localStorage.setItem(varn, inp.value);
+                    if (document.getElementById('text-input').value) renderText();
                 });
             }
             const rs = document.getElementById('radius-slider');
             const rv = document.getElementById('radius-val');
             let r = getComputedStyle(document.documentElement).getPropertyValue('--cell-radius').trim() || '3px';
-            let n = parseInt(r) || 3;
+            let n = parseInt(r);
+            if (isNaN(n)) n = 3;
             rs.value = n;
             rv.textContent = n;
             rs.addEventListener('input', () => {
@@ -803,11 +813,13 @@
                 document.documentElement.style.setProperty('--cell-radius', val);
                 localStorage.setItem('--cell-radius', val);
                 rv.textContent = rs.value;
+                if (document.getElementById('text-input').value) renderText();
             });
             const ss = document.getElementById('size-slider');
             const sv = document.getElementById('size-val');
             let s = getComputedStyle(document.documentElement).getPropertyValue('--cell-size').trim() || '30px';
-            let sn = parseInt(s) || 30;
+            let sn = parseInt(s);
+            if (isNaN(sn)) sn = 30;
             ss.value = sn;
             sv.textContent = sn;
             ss.addEventListener('input', () => {
@@ -815,11 +827,13 @@
                 document.documentElement.style.setProperty('--cell-size', val);
                 localStorage.setItem('--cell-size', val);
                 sv.textContent = ss.value;
+                if (document.getElementById('text-input').value) renderText();
             });
             const ps = document.getElementById('perline-slider');
             const pv = document.getElementById('perline-val');
             let p = getComputedStyle(document.documentElement).getPropertyValue('--blocks-per-line').trim() || '6';
-            let pn = parseInt(p) || 6;
+            let pn = parseInt(p);
+            if (isNaN(pn)) pn = 6;
             ps.value = pn;
             pv.textContent = pn;
             ps.addEventListener('input', () => {
@@ -827,11 +841,16 @@
                 document.documentElement.style.setProperty('--blocks-per-line', val);
                 localStorage.setItem('--blocks-per-line', val);
                 pv.textContent = ps.value;
+                if (document.getElementById('text-input').value) renderText();
+            });
+            ps.addEventListener('change', () => {
+                if (document.getElementById('text-input').value) renderText();
             });
             const gs = document.getElementById('gap-slider');
             const gv = document.getElementById('gap-val');
             let g = getComputedStyle(document.documentElement).getPropertyValue('--block-gap').trim() || '15px';
-            let gn = parseInt(g) || 15;
+            let gn = parseInt(g);
+            if (isNaN(gn)) gn = 15;
             gs.value = gn;
             gv.textContent = gn;
             gs.addEventListener('input', () => {
@@ -839,11 +858,16 @@
                 document.documentElement.style.setProperty('--block-gap', val);
                 localStorage.setItem('--block-gap', val);
                 gv.textContent = gs.value;
+                if (document.getElementById('text-input').value) renderText();
+            });
+            gs.addEventListener('change', () => {
+                if (document.getElementById('text-input').value) renderText();
             });
             const rgs = document.getElementById('row-gap-slider');
             const rgv = document.getElementById('row-gap-val');
             let rg = getComputedStyle(document.documentElement).getPropertyValue('--block-row-gap').trim() || '15px';
-            let rgn = parseInt(rg) || 15;
+            let rgn = parseInt(rg);
+            if (isNaN(rgn)) rgn = 15;
             rgs.value = rgn;
             rgv.textContent = rgn;
             rgs.addEventListener('input', () => {
@@ -851,11 +875,13 @@
                 document.documentElement.style.setProperty('--block-row-gap', val);
                 localStorage.setItem('--block-row-gap', val);
                 rgv.textContent = rgs.value;
+                if (document.getElementById('text-input').value) renderText();
             });
             const is = document.getElementById('internal-slider');
             const iv = document.getElementById('internal-val');
             let ig = getComputedStyle(document.documentElement).getPropertyValue('--cell-gap').trim() || '2px';
-            let ign = parseInt(ig) || 2;
+            let ign = parseInt(ig);
+            if (isNaN(ign)) ign = 2;
             is.value = ign;
             iv.textContent = ign;
             is.addEventListener('input', () => {
@@ -863,6 +889,7 @@
                 document.documentElement.style.setProperty('--cell-gap', val);
                 localStorage.setItem('--cell-gap', val);
                 iv.textContent = is.value;
+                if (document.getElementById('text-input').value) renderText();
             });
             const codeToggle = document.getElementById('legend-code-toggle');
             const codeStored = localStorage.getItem('show-legend-code');
@@ -904,6 +931,8 @@
             document.getElementById('row-gap-val').textContent = 15;
             document.getElementById('internal-slider').value = 2;
             document.getElementById('internal-val').textContent = 2;
+            if (document.getElementById('text-input').value) renderText();
+            renderGameBlocks();
         }
 
         function exportBlocks() {
