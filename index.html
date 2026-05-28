@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Fonético — Visualizador Unificado</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <h1>Dashboard Fonético</h1>
+        <div class="input-central">
+            <input type="text" id="texto-fonetico" placeholder="Escreve uma palavra ou frase..." autocomplete="off">
+        </div>
+        <nav class="menu-visualizadores">
+            <button class="btn-vista active" data-modo="todas">Ver Todas</button>
+            <button class="btn-vista" data-modo="a">Versão A</button>
+            <button class="btn-vista" data-modo="b">Versão B</button>
+            <button class="btn-vista" data-modo="c">Versão C</button>
+        </nav>
+    </header>
+
+    <main id="area-visualizadores" class="modo-todas">
+        <section id="container-a" class="painel-viz">
+            <h2 class="viz-titulo">Visualizador A — Alfabeto 5×5</h2>
+
+            <div id="tabs-a" class="tabs">
+                <button id="btnTabText-a" class="tab-btn active">Modo Texto</button>
+                <button id="btnTabDraw-a" class="tab-btn">Modo Desenho</button>
+                <button id="btnTabGame-a" class="tab-btn">Modo Jogo</button>
+            </div>
+
+            <div id="toolbar-area-a" class="toolbar-area">
+                <div class="toolbar-buttons">
+                    <button id="btnExport-a" class="toolbar-btn" title="Exportar blocos">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
+                    <div id="exportMenu-a" class="dropdown-menu hidden">
+                        <button data-format="png">PNG</button>
+                        <button data-format="jpeg">JPEG</button>
+                        <button data-format="webp">WebP</button>
+                        <button data-format="svg">SVG</button>
+                    </div>
+                    <button id="btnSettingsToggle-a" class="toolbar-btn" title="Personalização">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    </button>
+                </div>
+                <div id="settingsPanel-a" class="settings-panel hidden">
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label>Fundo da página</label>
+                            <input type="color" id="cfgPageBg-a" value="#1a1a1a">
+                        </div>
+                        <div class="setting-item">
+                            <label>Caixa dos blocos</label>
+                            <input type="color" id="cfgBoxBg-a" value="#222222">
+                        </div>
+                        <div class="setting-item">
+                            <label>Células preenchidas</label>
+                            <input type="color" id="cfgCellFill-a" value="#ffffff">
+                        </div>
+                        <div class="setting-item">
+                            <label>Células vazias</label>
+                            <input type="color" id="cfgCellEmpty-a" value="#2a2a2a">
+                        </div>
+                        <div class="setting-item">
+                            <label>Arredondamento <span class="val-label" id="lblCornerRadius-a">0</span></label>
+                            <input type="range" id="cfgCornerRadius-a" min="0" max="10" value="0" step="1">
+                        </div>
+                        <div class="setting-item">
+                            <label>Tamanho blocos <span class="val-label" id="lblCellSize-a">20</span>px</label>
+                            <input type="range" id="cfgCellSize-a" min="10" max="40" value="20" step="1">
+                        </div>
+                        <div class="setting-item">
+                            <label>Blocos/linha <span class="val-label" id="lblBlocksPerRow-a">auto</span></label>
+                            <input type="range" id="cfgBlocksPerRow-a" min="0" max="20" value="0" step="1">
+                        </div>
+                        <div class="setting-item">
+                            <label>Espaço blocos <span class="val-label" id="lblBlockMargin-a">22</span>px</label>
+                            <input type="range" id="cfgBlockMargin-a" min="4" max="60" value="22" step="1">
+                        </div>
+                        <div class="setting-item">
+                            <label>Margem células <span class="val-label" id="lblGap-a">3</span>px</label>
+                            <input type="range" id="cfgGap-a" min="0" max="10" value="3" step="1">
+                        </div>
+                        <div class="setting-item">
+                            <label>Quebra linhas <span class="val-label" id="lblBlockRowGap-a">20</span>px</label>
+                            <input type="range" id="cfgBlockRowGap-a" min="4" max="60" value="20" step="1">
+                        </div>
+                        <div class="setting-item">
+                            <label>Contorno 3×3</label>
+                            <div class="guide-controls">
+                                <label class="switch small-switch">
+                                    <input type="checkbox" id="cfgShowGuide-a" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <input type="color" id="cfgGuideColor-a" value="#3d3d3d">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabText-a" class="tab-content-a active">
+                <div class="toggle-container">
+                    <label class="switch">
+                        <input type="checkbox" id="toggleInputTexto-a" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span>Mostrar texto original</span>
+                </div>
+                <div class="toggle-container">
+                    <label class="switch">
+                        <input type="checkbox" id="toggleLegendaOriginal-a">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Legenda de cada bloco</span>
+                </div>
+                <div class="canvas-container-a">
+                    <canvas id="canvasText-a" width="800" height="240"></canvas>
+                </div>
+            </div>
+
+            <div id="tabDraw-a" class="tab-content-a">
+                <p class="instrucoes">Clica nas células para alternar estados. Clica no '+' para novo bloco.</p>
+                <div class="toggle-container">
+                    <label class="switch">
+                        <input type="checkbox" id="toggleTraducao-a" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span>Mostrar tradução das letras</span>
+                </div>
+                <div class="draw-mode-container-a">
+                    <div class="canvas-scroll-area-a">
+                        <canvas id="canvasDraw-a" width="800" height="240"></canvas>
+                    </div>
+                    <button id="btnAddNewBlock-a" class="add-block-btn">+</button>
+                </div>
+            </div>
+
+            <div id="tabGame-a" class="tab-content-a">
+                <p class="instrucoes">Observa os blocos e escreve a palavra correspondente.</p>
+                <div class="canvas-container-a">
+                    <canvas id="canvasGame-a" width="600" height="100"></canvas>
+                </div>
+                <input type="text" id="gameInput-a" placeholder="Escreve a palavra..." autocomplete="off" class="game-text-input">
+                <div id="feedbackGame-a"></div>
+                <div id="progressContainer-a" class="progress-container">
+                    <div id="progressBar-a" class="progress-bar"></div>
+                    <span id="progressLabel-a" class="progress-label"></span>
+                </div>
+                <div class="game-buttons">
+                    <button id="btnNovaPalavra-a" class="add-block-btn">Nova Palavra</button>
+                    <button id="btnMostrarResposta-a" class="add-block-btn">Mostrar Resposta</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="container-b" class="painel-viz">
+            <h2 class="viz-titulo">Visualizador B — Laboratório 7×7</h2>
+
+            <div class="color-panel-b">
+                <span>Cores:</span>
+                <label>Página <input type="color" id="color-page-b" value="#f4f4f9"></label>
+                <label>Caixa <input type="color" id="color-box-b" value="#ffffff"></label>
+                <label>Números <input type="color" id="color-filled-b" value="#2c3e50"></label>
+                <label>Vazias <input type="color" id="color-empty-b" value="#e0e0e0"></label>
+                <label>Vogais <input type="color" id="color-vowel-b" value="#e74c3c"></label>
+                <label>Arredondar <input type="range" id="radius-slider-b" min="0" max="15" step="1" value="3"><span id="radius-val-b">3</span>px</label>
+                <label>Tamanho <input type="range" id="size-slider-b" min="10" max="50" step="1" value="30"><span id="size-val-b">30</span>px</label>
+                <label>Por linha <input type="range" id="perline-slider-b" min="1" max="15" step="1" value="6"><span id="perline-val-b">6</span></label>
+                <label>Espaço <input type="range" id="gap-slider-b" min="0" max="40" step="1" value="15"><span id="gap-val-b">15</span>px</label>
+                <label>Quebra <input type="range" id="row-gap-slider-b" min="0" max="40" step="1" value="15"><span id="row-gap-val-b">15</span>px</label>
+                <label>Interno <input type="range" id="internal-slider-b" min="0" max="10" step="1" value="2"><span id="internal-val-b">2</span>px</label>
+                <label>Código <input type="checkbox" id="legend-code-toggle-b" checked></label>
+                <label>Texto <input type="checkbox" id="legend-text-toggle-b" checked></label>
+                <button id="btn-reset-b">Restaurar</button>
+            </div>
+
+            <div id="tabs-b" class="tabs">
+                <button id="btnTabEditor-b" class="tab-btn">Editor de Caracteres</button>
+                <button id="btnTabTester-b" class="tab-btn active">Testador de Texto</button>
+                <button id="btnTabGame-b" class="tab-btn">Jogo</button>
+            </div>
+
+            <div id="editor-b" class="tab-content-b">
+                <h3 style="text-align: center;">Cria o teu Algarismo</h3>
+                <p style="text-align: center; color: #666;">Clica nos quadrados para desenhar.</p>
+                <div id="editor-grid-b" class="grid-7x7-b"></div>
+                <div id="array-output-b" class="code-output-b">[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]</div>
+                <div style="text-align: center;">
+                    <button id="btn-copy-array-b" class="copy-btn-b">Copiar Array</button>
+                </div>
+            </div>
+
+            <div id="tester-b" class="tab-content-b active">
+                <div class="input-group-b">
+                    <h3>Resultado</h3>
+                    <div id="debug-output-b" class="debug-info-b">Código Fonético: -</div>
+                </div>
+                <div id="word-container-b" class="word-display-b"></div>
+                <div class="export-section-b">
+                    <button id="btn-export-b">Exportar Blocos</button>
+                    <select id="export-format-b" class="select-export-b">
+                        <option value="png">PNG</option>
+                        <option value="jpeg">JPEG</option>
+                        <option value="webp">WEBP</option>
+                        <option value="svg">SVG</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="jogo-b" class="tab-content-b">
+                <div class="game-area-b">
+                    <h3>Adivinha a Palavra</h3>
+                    <p style="color: #666;">Traduz os blocos visuais para texto e escreve a tua resposta.</p>
+                    <div id="game-blocks-b" class="game-blocks-b"></div>
+                    <input type="text" id="game-input-b" class="game-input-b" placeholder="Escreve a tua resposta...">
+                    <div id="game-feedback-b" class="game-feedback-b"></div>
+                    <div id="game-solution-b" class="game-solution-b"></div>
+                    <div class="game-buttons-b">
+                        <button id="btn-verificar-b" class="btn-verificar-b">Verificar</button>
+                        <button id="btn-nova-b" class="btn-nova-b">Nova Palavra</button>
+                        <button id="btn-solucao-b" class="btn-solucao-b">Mostrar Solução</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="container-c" class="painel-viz">
+            <h2 class="viz-titulo">Visualizador C — SVG 9×9</h2>
+
+            <div id="painelControlos-c" class="painel-controlos-c">
+                <div class="controlo-cor-c">
+                    <input type="color" id="corFundoCelula-c" value="#121212">
+                    <label for="corFundoCelula-c">Fundo</label>
+                </div>
+                <div class="controlo-cor-c">
+                    <input type="color" id="corGrelha-c" value="#2a2a2a">
+                    <label for="corGrelha-c">Grelha</label>
+                </div>
+                <div class="controlo-cor-c">
+                    <input type="color" id="corConsoante-c" value="#4CAF50">
+                    <label for="corConsoante-c">Consoantes</label>
+                </div>
+                <div class="controlo-cor-c">
+                    <input type="color" id="corLinhaVogal-c" value="#2196F3">
+                    <label for="corLinhaVogal-c">Vogais</label>
+                </div>
+                <div class="controlo-slider-c">
+                    <label for="sliderCurvatura-c">Curvatura</label>
+                    <input type="range" id="sliderCurvatura-c" min="0" max="100" value="50">
+                    <span id="valorCurvatura-c">50%</span>
+                </div>
+                <div class="controlo-slider-c">
+                    <label for="sliderOpacidade-c">Transparência</label>
+                    <input type="range" id="sliderOpacidade-c" min="0" max="100" value="20">
+                    <span id="valorOpacidade-c">20%</span>
+                </div>
+                <div class="controlo-slider-c">
+                    <label for="sliderArredondamento-c">Arredondamento</label>
+                    <input type="range" id="sliderArredondamento-c" min="0" max="50" value="0">
+                    <span id="valorArredondamento-c">0px</span>
+                </div>
+                <div class="controlo-toggle-c">
+                    <input type="checkbox" id="toggleInput-c" checked>
+                    <label for="toggleInput-c" class="toggle-switch-c"></label>
+                    <label for="toggleInput-c">Input</label>
+                </div>
+                <div class="controlo-toggle-c">
+                    <input type="checkbox" id="toggleLegenda-c" checked>
+                    <label for="toggleLegenda-c" class="toggle-switch-c"></label>
+                    <label for="toggleLegenda-c">Legendas</label>
+                </div>
+                <div class="controlo-toggle-c">
+                    <input type="checkbox" id="toggleFundoTransparente-c">
+                    <label for="toggleFundoTransparente-c" class="toggle-switch-c"></label>
+                    <label for="toggleFundoTransparente-c">Fundo Transparente</label>
+                </div>
+                <select id="formatoExportacao-c" class="select-export-c" title="Formato de exportação">
+                    <option value="png">PNG</option>
+                    <option value="jpeg">JPEG</option>
+                    <option value="svg">SVG</option>
+                    <option value="webp">WEBP</option>
+                </select>
+                <button id="btnExportar-c" class="btn-export-c" title="Exportar blocos como imagem">Exportar</button>
+            </div>
+
+            <div id="containerTexto-c" class="container-texto-c"></div>
+            <canvas id="canvasExportacao-c" style="display:none;"></canvas>
+        </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
