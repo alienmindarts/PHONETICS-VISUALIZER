@@ -269,6 +269,16 @@ export class VisualizadorTipoC {
     _bindControls() {
         const self = this;
 
+        ['corFundoCelula-c', 'corGrelha-c', 'corConsoante-c', 'corLinhaVogal-c'].forEach(id => {
+            const el = this._q('#' + id);
+            if (el) {
+                el.addEventListener('input', function() {
+                    const prop = '--' + id.replace('-c', '').replace(/([A-Z])/g, '-$1').toLowerCase() + '-c';
+                    self.container.style.setProperty(prop, this.value);
+                });
+            }
+        });
+
         this._q('#toggleInput-c').addEventListener('change', function() {
             self._q('#input-c') && (self._q('#input-c').style.display = this.checked ? '' : 'none');
         });

@@ -237,10 +237,10 @@ export class VisualizadorTipoB {
     _initColorControls() {
         const self = this;
         const defs = {
-            '--bg-color': '#f4f4f9', '--content-bg': '#ffffff',
-            '--grid-empty': '#e0e0e0', '--grid-filled': '#2c3e50', '--grid-vowel': '#e74c3c',
-            '--cell-radius': '3px', '--cell-size': '30px', '--cell-gap': '2px',
-            '--blocks-per-line': '6', '--block-gap': '15px', '--block-row-gap': '15px'
+            '--bg-color-b': '#f4f4f9', '--content-bg-b': '#ffffff',
+            '--grid-empty-b': '#e0e0e0', '--grid-filled-b': '#2c3e50', '--grid-vowel-b': '#e74c3c',
+            '--cell-radius-b': '3px', '--cell-size-b': '30px', '--cell-gap-b': '2px',
+            '--blocks-per-line-b': '6', '--block-gap-b': '15px', '--block-row-gap-b': '15px'
         };
 
         function load() {
@@ -253,7 +253,7 @@ export class VisualizadorTipoB {
         load();
 
         const ids = { page: 'color-page-b', box: 'color-box-b', empty: 'color-empty-b', filled: 'color-filled-b', vowel: 'color-vowel-b' };
-        const vars = { page: '--bg-color', box: '--content-bg', empty: '--grid-empty', filled: '--grid-filled', vowel: '--grid-vowel' };
+        const vars = { page: '--bg-color-b', box: '--content-bg-b', empty: '--grid-empty-b', filled: '--grid-filled-b', vowel: '--grid-vowel-b' };
         for (let key in ids) {
             const inp = this._q('#' + ids[key]);
             const varn = vars[key];
@@ -281,12 +281,12 @@ export class VisualizadorTipoB {
             });
         }
 
-        bindSlider('radius-slider-b', 'radius-val-b', '--cell-radius');
-        bindSlider('size-slider-b', 'size-val-b', '--cell-size');
-        bindSlider('perline-slider-b', 'perline-val-b', '--blocks-per-line');
-        bindSlider('gap-slider-b', 'gap-val-b', '--block-gap');
-        bindSlider('row-gap-slider-b', 'row-gap-val-b', '--block-row-gap');
-        bindSlider('internal-slider-b', 'internal-val-b', '--cell-gap');
+        bindSlider('radius-slider-b', 'radius-val-b', '--cell-radius-b');
+        bindSlider('size-slider-b', 'size-val-b', '--cell-size-b');
+        bindSlider('perline-slider-b', 'perline-val-b', '--blocks-per-line-b');
+        bindSlider('gap-slider-b', 'gap-val-b', '--block-gap-b');
+        bindSlider('row-gap-slider-b', 'row-gap-val-b', '--block-row-gap-b');
+        bindSlider('internal-slider-b', 'internal-val-b', '--cell-gap-b');
 
         const codeToggle = this._q('#legend-code-toggle-b');
         const codeStored = localStorage.getItem('vizb-show-legend-code');
@@ -309,11 +309,11 @@ export class VisualizadorTipoB {
                 self.container.style.setProperty(k, defs[k]);
                 localStorage.removeItem('vizb-' + k);
             }
-            self._q('#color-page-b').value = defs['--bg-color'];
-            self._q('#color-box-b').value = defs['--content-bg'];
-            self._q('#color-empty-b').value = defs['--grid-empty'];
-            self._q('#color-filled-b').value = defs['--grid-filled'];
-            self._q('#color-vowel-b').value = defs['--grid-vowel'];
+            self._q('#color-page-b').value = defs['--bg-color-b'];
+            self._q('#color-box-b').value = defs['--content-bg-b'];
+            self._q('#color-empty-b').value = defs['--grid-empty-b'];
+            self._q('#color-filled-b').value = defs['--grid-filled-b'];
+            self._q('#color-vowel-b').value = defs['--grid-vowel-b'];
             self._q('#radius-slider-b').value = 3;
             self._q('#radius-val-b').textContent = 3;
             self._q('#size-slider-b').value = 30;
