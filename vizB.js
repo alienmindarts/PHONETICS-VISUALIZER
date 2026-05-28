@@ -243,12 +243,15 @@ export class VisualizadorTipoB {
             '--blocks-per-line-b': '6', '--block-gap-b': '15px', '--block-row-gap-b': '15px'
         };
 
-        function load() {
-            for (let k in defs) {
-                const v = localStorage.getItem('vizb-' + k) || defs[k];
-                self.container.style.setProperty(k, v);
-            }
-        }
+function load() {
+             for (let k in defs) {
+                 let v = localStorage.getItem('vizb-' + k) || defs[k];
+                 if (k === '--blocks-per-line-b' && v.toString().includes('px')) {
+                     v = parseInt(v) || defs[k];
+                 }
+                 self.container.style.setProperty(k, v);
+             }
+         }
 
         load();
 
@@ -265,7 +268,7 @@ export class VisualizadorTipoB {
             });
         }
 
-        function bindSlider(sliderId, valId, cssVar) {
+        function bindSlider(sliderId, valId, cssVar, isNumberOnly) {
             const s = self._q('#' + sliderId);
             const v = self._q('#' + valId);
             const compStyle = getComputedStyle(self.container);
@@ -274,7 +277,7 @@ export class VisualizadorTipoB {
             s.value = num;
             v.textContent = num;
             s.addEventListener('input', () => {
-                const newVal = s.value + 'px';
+                const newVal = isNumberOnly ? s.value : s.value + 'px';
                 self.container.style.setProperty(cssVar, newVal);
                 localStorage.setItem('vizb-' + cssVar, newVal);
                 v.textContent = s.value;
@@ -283,7 +286,7 @@ export class VisualizadorTipoB {
 
         bindSlider('radius-slider-b', 'radius-val-b', '--cell-radius-b');
         bindSlider('size-slider-b', 'size-val-b', '--cell-size-b');
-        bindSlider('perline-slider-b', 'perline-val-b', '--blocks-per-line-b');
+        bindSlider('perline-slider-b', 'perline-val-b', '--blocks-per-line-b', true);
         bindSlider('gap-slider-b', 'gap-val-b', '--block-gap-b');
         bindSlider('row-gap-slider-b', 'row-gap-val-b', '--block-row-gap-b');
         bindSlider('internal-slider-b', 'internal-val-b', '--cell-gap-b');
